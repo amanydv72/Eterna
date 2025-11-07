@@ -4,6 +4,7 @@ import websocket from '@fastify/websocket';
 import { environment } from './config/environment';
 import { testDatabaseConnection, closeDatabaseConnection } from './config/database';
 import { testRedisConnection, closeRedisConnection } from './config/redis';
+import { queueManager } from './queue';
 import logger from './utils/logger';
 
 // Initialize Fastify
@@ -72,6 +73,7 @@ async function gracefulShutdown(signal: string) {
   logger.info(`${signal} received, starting graceful shutdown...`);
   
   try {
+    await queueManager.shutdown();
     await fastify.close();
     await closeDatabaseConnection();
     await closeRedisConnection();
@@ -96,6 +98,9 @@ async function start() {
     if (!dbHealthy || !redisHealthy) {
       throw new Error('Required services are not available');
     }
+
+    // Initialize queue manager
+    await queueManager.initialize();
 
     // Start listening
     await fastify.listen({
