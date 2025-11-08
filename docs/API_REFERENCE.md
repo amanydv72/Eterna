@@ -1,4 +1,4 @@
-# 📚 API Documentation
+#  API Documentation
 
 ## Base URL
 
@@ -27,11 +27,11 @@ Execute a new market order with DEX routing.
 
 ```typescript
 {
-  tokenIn: string;      // Solana token address (32-44 characters)
-  tokenOut: string;     // Solana token address (32-44 characters)
-  amountIn: number;     // Amount to swap (must be > 0)
-  slippage?: number;    // Slippage tolerance (0.0001 - 0.5, default: 0.01)
-  orderType?: string;   // Order type (currently only "market" supported)
+tokenIn: string;      // Solana token address (32-44 characters)
+tokenOut: string;     // Solana token address (32-44 characters)
+amountIn: number;     // Amount to swap (must be > 0)
+slippage?: number;    // Slippage tolerance (0.0001 - 0.5, default: 0.01)
+orderType?: string;   // Order type (currently only "market" supported)
 }
 ```
 
@@ -39,32 +39,32 @@ Execute a new market order with DEX routing.
 
 ```bash
 curl -X POST http://localhost:3000/api/orders/execute \
-  -H "Content-Type: application/json" \
-  -d '{
+-H "Content-Type: application/json" \
+-d '{
     "tokenIn": "So11111111111111111111111111111111111111112",
     "tokenOut": "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v",
     "amountIn": 10,
     "slippage": 0.01
-  }'
+}'
 ```
 
 **Success Response (200 OK):**
 
 ```json
 {
-  "success": true,
-  "orderId": "550e8400-e29b-41d4-a716-446655440000",
-  "status": "pending",
-  "message": "Order created and queued for execution",
-  "websocketUrl": "ws://localhost:3000/ws/orders/550e8400-e29b-41d4-a716-446655440000",
-  "data": {
+"success": true,
+"orderId": "550e8400-e29b-41d4-a716-446655440000",
+"status": "pending",
+"message": "Order created and queued for execution",
+"websocketUrl": "ws://localhost:3000/ws/orders/550e8400-e29b-41d4-a716-446655440000",
+"data": {
     "tokenIn": "So11111111111111111111111111111111111111112",
     "tokenOut": "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v",
     "amountIn": 10,
     "slippage": 0.01,
     "orderType": "market",
     "createdAt": "2024-01-15T10:30:00.000Z"
-  }
+}
 }
 ```
 
@@ -72,10 +72,10 @@ curl -X POST http://localhost:3000/api/orders/execute \
 
 ```json
 {
-  "success": false,
-  "error": "Validation Error",
-  "message": "Invalid Solana address format for tokenIn",
-  "statusCode": 400
+"success": false,
+"error": "Validation Error",
+"message": "Invalid Solana address format for tokenIn",
+"statusCode": 400
 }
 ```
 
@@ -108,8 +108,8 @@ curl http://localhost:3000/api/orders/550e8400-e29b-41d4-a716-446655440000
 
 ```json
 {
-  "success": true,
-  "data": {
+"success": true,
+"data": {
     "id": "550e8400-e29b-41d4-a716-446655440000",
     "type": "market",
     "status": "confirmed",
@@ -127,7 +127,7 @@ curl http://localhost:3000/api/orders/550e8400-e29b-41d4-a716-446655440000
     "createdAt": "2024-01-15T10:30:00.000Z",
     "updatedAt": "2024-01-15T10:30:05.000Z",
     "completedAt": "2024-01-15T10:30:05.000Z"
-  }
+}
 }
 ```
 
@@ -135,8 +135,8 @@ curl http://localhost:3000/api/orders/550e8400-e29b-41d4-a716-446655440000
 
 ```json
 {
-  "success": false,
-  "error": "Order not found"
+"success": false,
+"error": "Order not found"
 }
 ```
 
@@ -151,7 +151,7 @@ List orders with optional filtering and pagination.
 **Query Parameters:**
 
 - `status` (string, optional) - Filter by order status
-  - Possible values: `pending`, `routing`, `building`, `submitted`, `confirmed`, `failed`
+- Possible values: `pending`, `routing`, `building`, `submitted`, `confirmed`, `failed`
 - `limit` (number, optional) - Number of orders per page (default: 10, max: 100)
 - `offset` (number, optional) - Pagination offset (default: 0)
 
@@ -175,8 +175,8 @@ curl "http://localhost:3000/api/orders?status=failed"
 
 ```json
 {
-  "success": true,
-  "data": [
+"success": true,
+"data": [
     {
       "id": "550e8400-e29b-41d4-a716-446655440000",
       "type": "market",
@@ -205,12 +205,12 @@ curl "http://localhost:3000/api/orders?status=failed"
       "createdAt": "2024-01-15T11:15:00.000Z",
       "completedAt": "2024-01-15T11:15:03.000Z"
     }
-  ],
-  "pagination": {
+],
+"pagination": {
     "limit": 10,
     "offset": 0,
     "count": 2
-  }
+}
 }
 ```
 
@@ -232,15 +232,15 @@ curl http://localhost:3000/api/orders/stats
 
 ```json
 {
-  "success": true,
-  "data": {
+"success": true,
+"data": {
     "pending": 5,
     "routing": 2,
     "processing": 2,
     "confirmed": 100,
     "failed": 3,
     "total": 110
-  }
+}
 }
 ```
 
@@ -272,15 +272,15 @@ const orderId = '550e8400-e29b-41d4-a716-446655440000';
 const ws = new WebSocket(`ws://localhost:3000/ws/orders/${orderId}`);
 
 ws.onopen = () => {
-  console.log('Connected to order updates');
+console.log('Connected to order updates');
 };
 
 ws.onmessage = (event) => {
-  const update = JSON.parse(event.data);
-  console.log('Order update:', update);
+const update = JSON.parse(event.data);
+console.log('Order update:', update);
   
-  // Handle different status updates
-  switch (update.status) {
+// Handle different status updates
+switch (update.status) {
     case 'routing':
       console.log('Comparing DEX prices...');
       break;
@@ -298,15 +298,15 @@ ws.onmessage = (event) => {
       console.error('Order failed:', update.data.errorMessage);
       ws.close();
       break;
-  }
+}
 };
 
 ws.onerror = (error) => {
-  console.error('WebSocket error:', error);
+console.error('WebSocket error:', error);
 };
 
 ws.onclose = () => {
-  console.log('Disconnected from order updates');
+console.log('Disconnected from order updates');
 };
 ```
 
@@ -326,13 +326,13 @@ wscat -c "ws://localhost:3000/ws/orders/550e8400-e29b-41d4-a716-446655440000"
 
 ```json
 {
-  "type": "status_update",
-  "orderId": "550e8400-e29b-41d4-a716-446655440000",
-  "status": "routing",
-  "timestamp": "2024-01-15T10:30:01.000Z",
-  "data": {
+"type": "status_update",
+"orderId": "550e8400-e29b-41d4-a716-446655440000",
+"status": "routing",
+"timestamp": "2024-01-15T10:30:01.000Z",
+"data": {
     "message": "Comparing DEX prices"
-  }
+}
 }
 ```
 
@@ -340,13 +340,13 @@ wscat -c "ws://localhost:3000/ws/orders/550e8400-e29b-41d4-a716-446655440000"
 
 ```json
 {
-  "type": "status_update",
-  "orderId": "550e8400-e29b-41d4-a716-446655440000",
-  "status": "building",
-  "timestamp": "2024-01-15T10:30:02.000Z",
-  "data": {
+"type": "status_update",
+"orderId": "550e8400-e29b-41d4-a716-446655440000",
+"status": "building",
+"timestamp": "2024-01-15T10:30:02.000Z",
+"data": {
     "message": "Building transaction"
-  }
+}
 }
 ```
 
@@ -354,13 +354,13 @@ wscat -c "ws://localhost:3000/ws/orders/550e8400-e29b-41d4-a716-446655440000"
 
 ```json
 {
-  "type": "status_update",
-  "orderId": "550e8400-e29b-41d4-a716-446655440000",
-  "status": "submitted",
-  "timestamp": "2024-01-15T10:30:03.000Z",
-  "data": {
+"type": "status_update",
+"orderId": "550e8400-e29b-41d4-a716-446655440000",
+"status": "submitted",
+"timestamp": "2024-01-15T10:30:03.000Z",
+"data": {
     "message": "Executing swap on raydium"
-  }
+}
 }
 ```
 
@@ -368,16 +368,16 @@ wscat -c "ws://localhost:3000/ws/orders/550e8400-e29b-41d4-a716-446655440000"
 
 ```json
 {
-  "type": "status_update",
-  "orderId": "550e8400-e29b-41d4-a716-446655440000",
-  "status": "confirmed",
-  "timestamp": "2024-01-15T10:30:05.000Z",
-  "data": {
+"type": "status_update",
+"orderId": "550e8400-e29b-41d4-a716-446655440000",
+"status": "confirmed",
+"timestamp": "2024-01-15T10:30:05.000Z",
+"data": {
     "message": "Transaction confirmed: 5j8k9l...",
     "executedPrice": 0.995,
     "amountOut": 9.95,
     "txHash": "5j8k9l0m1n2o3p4q5r6s7t8u9v0w1x2y3z4a5b6c7d8e9f0g1h2i3j4k5l6m7n8o9p0q"
-  }
+}
 }
 ```
 
@@ -385,15 +385,15 @@ wscat -c "ws://localhost:3000/ws/orders/550e8400-e29b-41d4-a716-446655440000"
 
 ```json
 {
-  "type": "status_update",
-  "orderId": "550e8400-e29b-41d4-a716-446655440000",
-  "status": "failed",
-  "timestamp": "2024-01-15T10:30:05.000Z",
-  "data": {
+"type": "status_update",
+"orderId": "550e8400-e29b-41d4-a716-446655440000",
+"status": "failed",
+"timestamp": "2024-01-15T10:30:05.000Z",
+"data": {
     "message": "Order failed: Network error",
     "errorMessage": "Network error",
     "retryCount": 3
-  }
+}
 }
 ```
 
@@ -411,9 +411,9 @@ curl http://localhost:3000/ws/health
 
 ```json
 {
-  "status": "healthy",
-  "connections": 5,
-  "activeOrders": 3
+"status": "healthy",
+"connections": 5,
+"activeOrders": 3
 }
 ```
 
@@ -424,7 +424,7 @@ curl http://localhost:3000/ws/health
 Orders progress through the following statuses:
 
 ```
-PENDING → ROUTING → BUILDING → SUBMITTED → CONFIRMED
+PENDING -> ROUTING -> BUILDING -> SUBMITTED -> CONFIRMED
                                               ↓
                                            FAILED
                                     (after max retries)
@@ -454,10 +454,10 @@ PENDING → ROUTING → BUILDING → SUBMITTED → CONFIRMED
 
 ```json
 {
-  "success": false,
-  "error": "Error Type",
-  "message": "Detailed error message",
-  "statusCode": 400
+"success": false,
+"error": "Error Type",
+"message": "Detailed error message",
+"statusCode": 400
 }
 ```
 
@@ -467,10 +467,10 @@ PENDING → ROUTING → BUILDING → SUBMITTED → CONFIRMED
 
 ```json
 {
-  "success": false,
-  "error": "Validation Error",
-  "message": "Invalid Solana address format for tokenIn",
-  "statusCode": 400
+"success": false,
+"error": "Validation Error",
+"message": "Invalid Solana address format for tokenIn",
+"statusCode": 400
 }
 ```
 
@@ -478,10 +478,10 @@ PENDING → ROUTING → BUILDING → SUBMITTED → CONFIRMED
 
 ```json
 {
-  "success": false,
-  "error": "Validation Error",
-  "message": "Amount must be greater than 0",
-  "statusCode": 400
+"success": false,
+"error": "Validation Error",
+"message": "Amount must be greater than 0",
+"statusCode": 400
 }
 ```
 
@@ -489,10 +489,10 @@ PENDING → ROUTING → BUILDING → SUBMITTED → CONFIRMED
 
 ```json
 {
-  "success": false,
-  "error": "Validation Error",
-  "message": "Slippage must be between 0.0001 and 0.5",
-  "statusCode": 400
+"success": false,
+"error": "Validation Error",
+"message": "Slippage must be between 0.0001 and 0.5",
+"statusCode": 400
 }
 ```
 
@@ -500,9 +500,9 @@ PENDING → ROUTING → BUILDING → SUBMITTED → CONFIRMED
 
 ```json
 {
-  "success": false,
-  "error": "Order not found",
-  "statusCode": 404
+"success": false,
+"error": "Order not found",
+"statusCode": 404
 }
 ```
 
@@ -557,10 +557,10 @@ Import the Postman collection from `postman_collection.json`:
 2. Click "Import"
 3. Select `postman_collection.json`
 4. Collection includes:
-   - All API endpoints with examples
-   - Validation test cases
-   - Pre-configured environment variables
-   - Automated response tests
+- All API endpoints with examples
+- Validation test cases
+- Pre-configured environment variables
+- Automated response tests
 
 ---
 
@@ -571,13 +571,13 @@ Import the Postman collection from `postman_collection.json`:
 ```bash
 # 1. Execute an order
 ORDER_RESPONSE=$(curl -s -X POST http://localhost:3000/api/orders/execute \
-  -H "Content-Type: application/json" \
-  -d '{
+-H "Content-Type: application/json" \
+-d '{
     "tokenIn": "So11111111111111111111111111111111111111112",
     "tokenOut": "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v",
     "amountIn": 10,
     "slippage": 0.01
-  }')
+}')
 
 echo "Order Response: $ORDER_RESPONSE"
 
@@ -611,12 +611,12 @@ const API_BASE = 'http://localhost:3000';
 
 // Execute order
 async function executeOrder(
-  tokenIn: string,
-  tokenOut: string,
-  amountIn: number,
-  slippage: number = 0.01
+tokenIn: string,
+tokenOut: string,
+amountIn: number,
+slippage: number = 0.01
 ) {
-  try {
+try {
     const response = await axios.post(`${API_BASE}/api/orders/execute`, {
       tokenIn,
       tokenOut,
@@ -625,43 +625,43 @@ async function executeOrder(
     });
     
     return response.data;
-  } catch (error) {
+} catch (error) {
     if (axios.isAxiosError(error)) {
       console.error('API Error:', error.response?.data);
     }
     throw error;
-  }
+}
 }
 
 // Get order by ID
 async function getOrder(orderId: string) {
-  const response = await axios.get(`${API_BASE}/api/orders/${orderId}`);
-  return response.data;
+const response = await axios.get(`${API_BASE}/api/orders/${orderId}`);
+return response.data;
 }
 
 // List orders
 async function listOrders(status?: string, limit: number = 10, offset: number = 0) {
-  const params = new URLSearchParams();
-  if (status) params.append('status', status);
-  params.append('limit', limit.toString());
-  params.append('offset', offset.toString());
+const params = new URLSearchParams();
+if (status) params.append('status', status);
+params.append('limit', limit.toString());
+params.append('offset', offset.toString());
   
-  const response = await axios.get(`${API_BASE}/api/orders?${params}`);
-  return response.data;
+const response = await axios.get(`${API_BASE}/api/orders?${params}`);
+return response.data;
 }
 
 // Get statistics
 async function getStats() {
-  const response = await axios.get(`${API_BASE}/api/orders/stats`);
-  return response.data;
+const response = await axios.get(`${API_BASE}/api/orders/stats`);
+return response.data;
 }
 
 // Usage
 const result = await executeOrder(
-  'So11111111111111111111111111111111111111112',
-  'EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v',
-  10,
-  0.01
+'So11111111111111111111111111111111111111112',
+'EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v',
+10,
+0.01
 );
 
 console.log('Order ID:', result.orderId);

@@ -61,122 +61,122 @@ The order execution system follows a modern microservices-inspired architecture 
 ### 1. Order Submission Flow
 
 ```typescript
-// Client → API
+// Client -> API
 POST /api/orders/execute
 {
-  tokenIn: "So11111111111111111111111111111111111111112",
-  tokenOut: "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v",
-  amountIn: 10,
-  slippage: 0.01
+tokenIn: "So11111111111111111111111111111111111111112",
+tokenOut: "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v",
+amountIn: 10,
+slippage: 0.01
 }
 
-// API → Service
+// API -> Service
 orderService.validateOrder(orderData)
 orderService.createOrder(orderData)
 
-// Service → Database
+// Service -> Database
 orderRepository.createOrder(newOrderRecord)
 // Status: PENDING
 
-// Service → Queue
+// Service -> Queue
 addOrderToQueue(orderId, orderData)
 
-// API → Client
+// API -> Client
 {
-  success: true,
-  orderId: "order_abc123",
-  status: "pending",
-  websocketUrl: "ws://localhost:3000/ws/orders/order_abc123"
+success: true,
+orderId: "order_abc123",
+status: "pending",
+websocketUrl: "ws://localhost:3000/ws/orders/order_abc123"
 }
 ```
 
 ### 2. Queue Processing Flow
 
 ```typescript
-// Queue → Worker
+// Queue -> Worker
 processOrder(job: Job<OrderJobData>)
 
-// Worker → Database (Update Status)
+// Worker -> Database (Update Status)
 updateOrderStatus(orderId, OrderStatus.ROUTING, "Comparing DEX prices")
 
-// Worker → WebSocket
+// Worker -> WebSocket
 wsManager.broadcastStatusUpdate({
-  orderId,
-  status: OrderStatus.ROUTING,
-  timestamp: new Date(),
-  data: { message: "Comparing DEX prices" }
+orderId,
+status: OrderStatus.ROUTING,
+timestamp: new Date(),
+data: { message: "Comparing DEX prices" }
 })
 
-// Worker → DEX Service
+// Worker -> DEX Service
 const { quote, decision } = await dexService.getRoutingDecision(
-  orderId,
-  tokenIn,
-  tokenOut,
-  amountIn
+orderId,
+tokenIn,
+tokenOut,
+amountIn
 )
 // Returns: Best DEX (Raydium/Meteora) with reasoning
 
-// Worker → Database (Update Status)
+// Worker -> Database (Update Status)
 updateOrderStatus(orderId, OrderStatus.BUILDING, "Building transaction")
 
-// Worker → WebSocket
+// Worker -> WebSocket
 wsManager.broadcastStatusUpdate({
-  orderId,
-  status: OrderStatus.BUILDING,
-  timestamp: new Date()
+orderId,
+status: OrderStatus.BUILDING,
+timestamp: new Date()
 })
 
-// Worker → Swap Executor
+// Worker -> Swap Executor
 const result = await swapExecutor.execute({
-  orderId,
-  dexProvider: decision.selectedProvider,
-  tokenIn,
-  tokenOut,
-  amountIn,
-  expectedPrice: quote.price,
-  slippage
+orderId,
+dexProvider: decision.selectedProvider,
+tokenIn,
+tokenOut,
+amountIn,
+expectedPrice: quote.price,
+slippage
 })
 // Simulates 2-3s transaction execution
 
-// Worker → Database (Update Status)
+// Worker -> Database (Update Status)
 updateOrderStatus(orderId, OrderStatus.SUBMITTED, "Executing swap")
 
-// Worker → WebSocket
+// Worker -> WebSocket
 wsManager.broadcastStatusUpdate({
-  orderId,
-  status: OrderStatus.SUBMITTED,
-  timestamp: new Date()
+orderId,
+status: OrderStatus.SUBMITTED,
+timestamp: new Date()
 })
 
 // After execution completes...
 
-// Worker → Database (Final Update)
+// Worker -> Database (Final Update)
 orderRepository.updateExecution(orderId, {
-  executedPrice: result.executedPrice,
-  amountOut: result.amountOut,
-  dexProvider: decision.selectedProvider,
-  txHash: result.txHash
+executedPrice: result.executedPrice,
+amountOut: result.amountOut,
+dexProvider: decision.selectedProvider,
+txHash: result.txHash
 })
 // Status: CONFIRMED
 
-// Worker → Cache
+// Worker -> Cache
 cacheService.updateCachedOrderStatus(orderId, {
-  status: OrderStatus.CONFIRMED,
-  executedPrice: result.executedPrice,
-  txHash: result.txHash
+status: OrderStatus.CONFIRMED,
+executedPrice: result.executedPrice,
+txHash: result.txHash
 })
 
-// Worker → WebSocket (Final Broadcast)
+// Worker -> WebSocket (Final Broadcast)
 wsManager.broadcastStatusUpdate({
-  orderId,
-  status: OrderStatus.CONFIRMED,
-  timestamp: new Date(),
-  data: {
+orderId,
+status: OrderStatus.CONFIRMED,
+timestamp: new Date(),
+data: {
     message: `Transaction confirmed: ${result.txHash}`,
     executedPrice: result.executedPrice,
     amountOut: result.amountOut,
     txHash: result.txHash
-  }
+}
 })
 ```
 
@@ -186,32 +186,32 @@ wsManager.broadcastStatusUpdate({
 // If error occurs during processing...
 
 try {
-  // ... execution logic
+// ... execution logic
 } catch (error) {
-  // Check retry count
-  if (attemptNumber < MAX_RETRIES) {
+// Check retry count
+if (attemptNumber < MAX_RETRIES) {
     // Calculate backoff delay
     const delay = calculateBackoff(attemptNumber)
     
     // Re-throw to trigger BullMQ retry
     throw error
-  } else {
+} else {
     // Max retries exceeded
     
-    // Worker → Database (Mark Failed)
+    // Worker -> Database (Mark Failed)
     orderRepository.markFailed(
       orderId,
       error.message,
       attemptNumber + 1
     )
     
-    // Worker → Cache
+    // Worker -> Cache
     cacheService.updateCachedOrderStatus(orderId, {
       status: OrderStatus.FAILED,
       errorMessage: error.message
     })
     
-    // Worker → WebSocket
+    // Worker -> WebSocket
     wsManager.broadcastStatusUpdate({
       orderId,
       status: OrderStatus.FAILED,
@@ -222,17 +222,17 @@ try {
         retryCount: attemptNumber + 1
       }
     })
-  }
+}
 }
 ```
 
 ## State Machine
 
 ```
-PENDING ──→ ROUTING ──→ BUILDING ──→ SUBMITTED ──→ CONFIRMED
+PENDING ──-> ROUTING ──-> BUILDING ──-> SUBMITTED ──-> CONFIRMED
                 │            │            │
                 │            │            │
-                └────────────┴────────────┴──────→ FAILED
+                └────────────┴────────────┴──────-> FAILED
                                                 (after max retries)
 ```
 
@@ -255,61 +255,61 @@ PENDING ──→ ROUTING ──→ BUILDING ──→ SUBMITTED ──→ CONFI
 ### Database Schema (PostgreSQL)
 ```sql
 orders (
-  id UUID PRIMARY KEY,
-  type VARCHAR(20) NOT NULL,
-  status VARCHAR(20) DEFAULT 'pending',
-  token_in VARCHAR(100) NOT NULL,
-  token_out VARCHAR(100) NOT NULL,
-  amount_in DECIMAL(20,8) NOT NULL,
-  amount_out DECIMAL(20,8),
-  expected_price DECIMAL(20,8),
-  executed_price DECIMAL(20,8),
-  slippage DECIMAL(5,4) DEFAULT 0.01,
-  dex_provider VARCHAR(20),
-  tx_hash VARCHAR(200),
-  error_message TEXT,
-  retry_count INTEGER DEFAULT 0,
-  created_at TIMESTAMP DEFAULT NOW(),
-  updated_at TIMESTAMP DEFAULT NOW(),
-  completed_at TIMESTAMP
+id UUID PRIMARY KEY,
+type VARCHAR(20) NOT NULL,
+status VARCHAR(20) DEFAULT 'pending',
+token_in VARCHAR(100) NOT NULL,
+token_out VARCHAR(100) NOT NULL,
+amount_in DECIMAL(20,8) NOT NULL,
+amount_out DECIMAL(20,8),
+expected_price DECIMAL(20,8),
+executed_price DECIMAL(20,8),
+slippage DECIMAL(5,4) DEFAULT 0.01,
+dex_provider VARCHAR(20),
+tx_hash VARCHAR(200),
+error_message TEXT,
+retry_count INTEGER DEFAULT 0,
+created_at TIMESTAMP DEFAULT NOW(),
+updated_at TIMESTAMP DEFAULT NOW(),
+completed_at TIMESTAMP
 )
 ```
 
 ### Cache Schema (Redis)
 ```
-order:{orderId}:status → JSON object with latest status
-order:{orderId}:active → Boolean flag
-status_update:{orderId}:{timestamp} → Status update event
+order:{orderId}:status -> JSON object with latest status
+order:{orderId}:active -> Boolean flag
+status_update:{orderId}:{timestamp} -> Status update event
 ```
 
 ### Queue Schema (BullMQ/Redis)
 ```
-bull:order-execution:waiting → List of pending jobs
-bull:order-execution:active → Set of processing jobs
-bull:order-execution:completed → Sorted set of completed jobs
-bull:order-execution:failed → Sorted set of failed jobs
+bull:order-execution:waiting -> List of pending jobs
+bull:order-execution:active -> Set of processing jobs
+bull:order-execution:completed -> Sorted set of completed jobs
+bull:order-execution:failed -> Sorted set of failed jobs
 ```
 
 ## Security & Validation
 
 1. **Input Validation**
-   - Solana address format (32-44 characters)
-   - Amount > 0
-   - Slippage: 0.01% - 50%
+- Solana address format (32-44 characters)
+- Amount > 0
+- Slippage: 0.01% - 50%
 
 2. **Rate Limiting**
-   - 100 orders per minute per queue
-   - Configurable per environment
+- 100 orders per minute per queue
+- Configurable per environment
 
 3. **Retry Strategy**
-   - Max 3 attempts
-   - Exponential backoff: 1s, 2s, 4s
-   - Random jitter to prevent thundering herd
+- Max 3 attempts
+- Exponential backoff: 1s, 2s, 4s
+- Random jitter to prevent thundering herd
 
 4. **Error Boundaries**
-   - Try-catch at each layer
-   - Graceful degradation
-   - Comprehensive logging
+- Try-catch at each layer
+- Graceful degradation
+- Comprehensive logging
 
 ## Monitoring & Observability
 
@@ -323,36 +323,36 @@ All events are logged with structured JSON including:
 Example log:
 ```json
 {
-  "level": "info",
-  "time": 1699401234567,
-  "pid": 12345,
-  "hostname": "worker-1",
-  "orderId": "order_abc123",
-  "status": "confirmed",
-  "dexProvider": "raydium",
-  "executedPrice": "0.995",
-  "amountOut": "9.95",
-  "txHash": "abc123...",
-  "duration": "3247ms",
-  "msg": "Order executed successfully"
+"level": "info",
+"time": 1699401234567,
+"pid": 12345,
+"hostname": "worker-1",
+"orderId": "order_abc123",
+"status": "confirmed",
+"dexProvider": "raydium",
+"executedPrice": "0.995",
+"amountOut": "9.95",
+"txHash": "abc123...",
+"duration": "3247ms",
+"msg": "Order executed successfully"
 }
 ```
 
 ## Testing Strategy
 
 1. **Unit Tests** (35 tests)
-   - Individual component testing
-   - Mock external dependencies
+- Individual component testing
+- Mock external dependencies
 
 2. **Integration Tests** (Phase 7)
-   - End-to-end flow testing
-   - Real database and queue
+- End-to-end flow testing
+- Real database and queue
 
 3. **Load Tests** (Future)
-   - Stress test queue throughput
-   - Measure system limits
+- Stress test queue throughput
+- Measure system limits
 
 4. **Chaos Tests** (Future)
-   - Network failures
-   - Database downtime
-   - Redis unavailability
+- Network failures
+- Database downtime
+- Redis unavailability

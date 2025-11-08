@@ -20,6 +20,7 @@ export const environment = {
 
   // Redis
   redis: {
+    url: process.env.REDIS_URL, // Render provides this
     host: process.env.REDIS_HOST || 'localhost',
     port: parseInt(process.env.REDIS_PORT || '6379', 10),
     password: process.env.REDIS_PASSWORD || undefined,

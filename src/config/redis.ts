@@ -2,16 +2,25 @@ import Redis from 'ioredis';
 import { environment } from './environment';
 
 // Create Redis client
-export const redis = new Redis({
-  host: environment.redis.host,
-  port: environment.redis.port,
-  password: environment.redis.password,
-  maxRetriesPerRequest: null, // Required for BullMQ
-  retryStrategy: (times) => {
-    const delay = Math.min(times * 50, 2000);
-    return delay;
-  },
-});
+// Render provides REDIS_URL, local dev uses host/port
+export const redis = environment.redis.url
+  ? new Redis(environment.redis.url, {
+      maxRetriesPerRequest: null, // Required for BullMQ
+      retryStrategy: (times) => {
+        const delay = Math.min(times * 50, 2000);
+        return delay;
+      },
+    })
+  : new Redis({
+      host: environment.redis.host,
+      port: environment.redis.port,
+      password: environment.redis.password,
+      maxRetriesPerRequest: null, // Required for BullMQ
+      retryStrategy: (times) => {
+        const delay = Math.min(times * 50, 2000);
+        return delay;
+      },
+    });
 
 // Test Redis connection
 export async function testRedisConnection(): Promise<boolean> {
