@@ -24,6 +24,46 @@ const fastify = Fastify({
         }
       : undefined,
   },
+  ajv: {
+    customOptions: {
+      removeAdditional: 'all',
+      coerceTypes: true,
+      useDefaults: true,
+    },
+  },
+});
+
+// Custom error handler for validation errors
+fastify.setErrorHandler((error, _request, reply) => {
+  // Prepare error response
+  let statusCode = 500;
+  let errorResponse;
+
+  // Handle validation errors
+  if (error.validation) {
+    statusCode = 400;
+    errorResponse = {
+      success: false,
+      error: 'Validation Error',
+      message: error.message,
+      statusCode: 400,
+    };
+  } else {
+    // Handle other errors
+    statusCode = error.statusCode || 500;
+    errorResponse = {
+      success: false,
+      error: error.name || 'Internal Server Error',
+      message: error.message || 'An unexpected error occurred',
+      statusCode,
+    };
+  }
+
+  // Send response bypassing schema validation
+  reply.code(statusCode);
+  reply.header('Content-Type', 'application/json; charset=utf-8');
+  reply.serializer((payload) => JSON.stringify(payload));
+  return reply.send(errorResponse);
 });
 
 // Register plugins

@@ -1,10 +1,10 @@
 import { FastifyInstance, FastifyRequest, FastifyReply } from 'fastify';
-import { v4 as uuidv4 } from 'uuid';
 import { orderService } from '../../services/order';
 import { addOrderToQueue, getQueueStats } from '../../queue';
 import { orderRepository } from '../../database';
 import { OrderStatus, OrderType } from '../../models/enums';
 import { environment } from '../../config/environment';
+import logger from '../../utils/logger';
 import {
   ExecuteOrderSchema,
   ExecuteOrderResponseSchema,
@@ -71,17 +71,16 @@ export async function registerOrderRoutes(server: FastifyInstance): Promise<void
           });
         }
 
-        // Generate order ID
-        const orderId = `order_${uuidv4()}`;
-
-        // Create order in database
-        const order = await orderService.createOrder({
+        // Create order in database (this generates the order ID)
+        const orderResult = await orderService.createOrder({
           type: orderType,
           tokenIn,
           tokenOut,
           amountIn,
           slippage,
         });
+
+        const orderId = orderResult.order.id;
 
         // Add to queue for processing
         await addOrderToQueue(orderId, {
@@ -95,6 +94,8 @@ export async function registerOrderRoutes(server: FastifyInstance): Promise<void
         const protocol = environment.host === 'localhost' ? 'ws' : 'wss';
         const websocketUrl = `${protocol}://${environment.host}:${environment.port}/ws/orders/${orderId}`;
 
+        logger.info({ orderId, websocketUrl }, 'Order submitted successfully');
+
         return reply.code(200).send({
           success: true,
           orderId,
@@ -102,12 +103,12 @@ export async function registerOrderRoutes(server: FastifyInstance): Promise<void
           message: 'Order created and queued for execution',
           websocketUrl,
           data: {
-            tokenIn: order.order.tokenIn,
-            tokenOut: order.order.tokenOut,
-            amountIn: order.order.amountIn,
-            slippage: order.order.slippage,
-            orderType: order.order.type,
-            createdAt: order.order.createdAt.toISOString(),
+            tokenIn: orderResult.order.tokenIn,
+            tokenOut: orderResult.order.tokenOut,
+            amountIn: orderResult.order.amountIn,
+            slippage: orderResult.order.slippage,
+            orderType: orderResult.order.type,
+            createdAt: orderResult.order.createdAt.toISOString(),
           },
         });
       } catch (error) {

@@ -1,0 +1,546 @@
+{
+  "info": {
+    "name": "Order Execution Engine API",
+    "_postman_id": "order-execution-engine-v1",
+    "description": "Complete API collection for testing the Order Execution Engine with DEX routing, WebSocket updates, and queue management.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "version": "1.0.0"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:3000",
+      "type": "string"
+    },
+    {
+      "key": "orderId",
+      "value": "",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "Orders",
+      "item": [
+        {
+          "name": "Execute Order (SOL to USDC)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"Response has orderId\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData).to.have.property('orderId');",
+                  "    pm.environment.set(\"orderId\", jsonData.orderId);",
+                  "});",
+                  "",
+                  "pm.test(\"Status is pending\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.status).to.eql('pending');",
+                  "});",
+                  "",
+                  "pm.test(\"WebSocket URL is provided\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.websocketUrl).to.match(/^wss?:\\/\\//);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"tokenIn\": \"So11111111111111111111111111111111111111112\",\n  \"tokenOut\": \"EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v\",\n  \"amountIn\": 10,\n  \"slippage\": 0.01\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/orders/execute",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "orders", "execute"]
+            },
+            "description": "Submit a market order to exchange SOL for USDC. The order will be queued for processing and executed via the best DEX (Raydium or Meteora)."
+          },
+          "response": []
+        },
+        {
+          "name": "Execute Order (Custom Slippage)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"tokenIn\": \"So11111111111111111111111111111111111111112\",\n  \"tokenOut\": \"EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v\",\n  \"amountIn\": 5.5,\n  \"slippage\": 0.02\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/orders/execute",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "orders", "execute"]
+            },
+            "description": "Execute order with custom slippage tolerance (2%)."
+          },
+          "response": []
+        },
+        {
+          "name": "Get Order by ID",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"Response has order data\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData).to.have.property('order');",
+                  "    pm.expect(jsonData.order).to.have.property('id');",
+                  "    pm.expect(jsonData.order).to.have.property('status');",
+                  "});",
+                  "",
+                  "pm.test(\"Order has valid status\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    var validStatuses = ['pending', 'routing', 'building', 'submitted', 'confirmed', 'failed'];",
+                  "    pm.expect(validStatuses).to.include(jsonData.order.status);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/orders/{{orderId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "orders", "{{orderId}}"]
+            },
+            "description": "Retrieve detailed information about a specific order using its ID. Make sure to execute an order first to get a valid orderId."
+          },
+          "response": []
+        },
+        {
+          "name": "List All Orders",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"Response has orders array\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData).to.have.property('orders');",
+                  "    pm.expect(jsonData.orders).to.be.an('array');",
+                  "});",
+                  "",
+                  "pm.test(\"Response has pagination\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData).to.have.property('pagination');",
+                  "    pm.expect(jsonData.pagination).to.have.property('limit');",
+                  "    pm.expect(jsonData.pagination).to.have.property('offset');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/orders?limit=10&offset=0",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "orders"],
+              "query": [
+                {
+                  "key": "limit",
+                  "value": "10",
+                  "description": "Number of orders per page"
+                },
+                {
+                  "key": "offset",
+                  "value": "0",
+                  "description": "Pagination offset"
+                }
+              ]
+            },
+            "description": "List all orders with pagination support."
+          },
+          "response": []
+        },
+        {
+          "name": "List Orders by Status (Confirmed)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/orders?status=confirmed&limit=20",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "orders"],
+              "query": [
+                {
+                  "key": "status",
+                  "value": "confirmed"
+                },
+                {
+                  "key": "limit",
+                  "value": "20"
+                }
+              ]
+            },
+            "description": "List only confirmed orders."
+          },
+          "response": []
+        },
+        {
+          "name": "List Orders by Status (Pending)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/orders?status=pending",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "orders"],
+              "query": [
+                {
+                  "key": "status",
+                  "value": "pending"
+                }
+              ]
+            },
+            "description": "List orders that are currently pending processing."
+          },
+          "response": []
+        },
+        {
+          "name": "List Orders by Status (Failed)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/orders?status=failed",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "orders"],
+              "query": [
+                {
+                  "key": "status",
+                  "value": "failed"
+                }
+              ]
+            },
+            "description": "List orders that failed during execution."
+          },
+          "response": []
+        },
+        {
+          "name": "Get Order Statistics",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"Response has stats\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData).to.have.property('stats');",
+                  "    pm.expect(jsonData.stats).to.have.property('pending');",
+                  "    pm.expect(jsonData.stats).to.have.property('confirmed');",
+                  "    pm.expect(jsonData.stats).to.have.property('failed');",
+                  "    pm.expect(jsonData.stats).to.have.property('total');",
+                  "});",
+                  "",
+                  "pm.test(\"Stats are numbers\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.stats.pending).to.be.a('number');",
+                  "    pm.expect(jsonData.stats.confirmed).to.be.a('number');",
+                  "    pm.expect(jsonData.stats.failed).to.be.a('number');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/orders/stats",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "orders", "stats"]
+            },
+            "description": "Get aggregated statistics about orders (pending, processing, confirmed, failed counts)."
+          },
+          "response": []
+        }
+      ],
+      "description": "Order execution and management endpoints"
+    },
+    {
+      "name": "WebSocket",
+      "item": [
+        {
+          "name": "WebSocket Health Check",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"WebSocket is healthy\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.status).to.eql('healthy');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/ws/health",
+              "host": ["{{baseUrl}}"],
+              "path": ["ws", "health"]
+            },
+            "description": "Check WebSocket service health status."
+          },
+          "response": []
+        }
+      ],
+      "description": "WebSocket connection endpoints. Note: For actual WebSocket connections, use a WebSocket client (e.g., wscat, browser console)."
+    },
+    {
+      "name": "Validation Tests",
+      "item": [
+        {
+          "name": "Invalid Token Address",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 400\", function () {",
+                  "    pm.response.to.have.status(400);",
+                  "});",
+                  "",
+                  "pm.test(\"Error message mentions validation\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData).to.have.property('error');",
+                  "    pm.expect(jsonData.error).to.be.a('string');",
+                  "    pm.expect(jsonData.error.toLowerCase()).to.include('validation');",
+                  "});",
+                  "",
+                  "pm.test(\"Response has expected error structure\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.success).to.equal(false);",
+                  "    pm.expect(jsonData).to.have.property('message');",
+                  "    pm.expect(jsonData.statusCode).to.equal(400);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"tokenIn\": \"invalid-address\",\n  \"tokenOut\": \"EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v\",\n  \"amountIn\": 10,\n  \"slippage\": 0.01\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/orders/execute",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "orders", "execute"]
+            },
+            "description": "Test validation with invalid Solana address format."
+          },
+          "response": []
+        },
+        {
+          "name": "Negative Amount",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 400\", function () {",
+                  "    pm.response.to.have.status(400);",
+                  "});",
+                  "",
+                  "pm.test(\"Response has expected error structure\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.success).to.equal(false);",
+                  "    pm.expect(jsonData).to.have.property('error');",
+                  "    pm.expect(jsonData).to.have.property('message');",
+                  "    pm.expect(jsonData.statusCode).to.equal(400);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"tokenIn\": \"So11111111111111111111111111111111111111112\",\n  \"tokenOut\": \"EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v\",\n  \"amountIn\": -5,\n  \"slippage\": 0.01\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/orders/execute",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "orders", "execute"]
+            },
+            "description": "Test validation with negative amount."
+          },
+          "response": []
+        },
+        {
+          "name": "Invalid Slippage (Too High)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 400\", function () {",
+                  "    pm.response.to.have.status(400);",
+                  "});",
+                  "",
+                  "pm.test(\"Response has expected error structure\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.success).to.equal(false);",
+                  "    pm.expect(jsonData).to.have.property('error');",
+                  "    pm.expect(jsonData).to.have.property('message');",
+                  "    pm.expect(jsonData.statusCode).to.equal(400);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"tokenIn\": \"So11111111111111111111111111111111111111112\",\n  \"tokenOut\": \"EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v\",\n  \"amountIn\": 10,\n  \"slippage\": 0.6\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/orders/execute",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "orders", "execute"]
+            },
+            "description": "Test validation with slippage exceeding 50% (0.5)."
+          },
+          "response": []
+        },
+        {
+          "name": "Missing Required Fields",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 400\", function () {",
+                  "    pm.response.to.have.status(400);",
+                  "});",
+                  "",
+                  "pm.test(\"Response has expected error structure\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.success).to.equal(false);",
+                  "    pm.expect(jsonData).to.have.property('error');",
+                  "    pm.expect(jsonData).to.have.property('message');",
+                  "    pm.expect(jsonData.statusCode).to.equal(400);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"tokenIn\": \"So11111111111111111111111111111111111111112\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/orders/execute",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "orders", "execute"]
+            },
+            "description": "Test validation with missing required fields."
+          },
+          "response": []
+        },
+        {
+          "name": "Invalid Order ID Format",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 400 or 500\", function () {",
+                  "    pm.expect([400, 500]).to.include(pm.response.code);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/orders/invalid-uuid-format",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "orders", "invalid-uuid-format"]
+            },
+            "description": "Test with invalid UUID format for order ID."
+          },
+          "response": []
+        }
+      ],
+      "description": "Test requests that should trigger validation errors"
+    }
+  ]
+}
