@@ -1,5 +1,6 @@
 import { CreateOrderDTO, OrderType } from '../../models';
 import { isValidSolanaAddress } from '../../utils/helpers';
+import { wsolHandler } from '../../utils/wsolHandler';
 
 export class OrderValidator {
   /**
@@ -25,6 +26,12 @@ export class OrderValidator {
     // Ensure different tokens
     if (orderData.tokenIn === orderData.tokenOut) {
       errors.push('tokenIn and tokenOut must be different');
+    }
+
+    // Use WSOL handler for additional validation
+    const wsolValidation = wsolHandler.validateTokenAddresses(orderData.tokenIn, orderData.tokenOut);
+    if (!wsolValidation.isValid) {
+      errors.push(...wsolValidation.errors);
     }
 
     // Validate amount

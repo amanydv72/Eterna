@@ -1,6 +1,7 @@
 import { orderRepository } from '../../database';
 import { CreateOrderDTO, OrderStatus, OrderType } from '../../models';
 import { mapOrderRecordToOrder, mapOrderToNewRecord, formatOrderResponse } from '../../database';
+import { wsolHandler } from '../../utils/wsolHandler';
 import logger from '../../utils/logger';
 
 export class OrderService {
@@ -172,6 +173,12 @@ export class OrderService {
     }
     if (orderData.tokenOut.length < 32 || orderData.tokenOut.length > 44) {
       errors.push('Invalid tokenOut address');
+    }
+
+    // Use WSOL handler for additional validation
+    const wsolValidation = wsolHandler.validateTokenAddresses(orderData.tokenIn, orderData.tokenOut);
+    if (!wsolValidation.isValid) {
+      errors.push(...wsolValidation.errors);
     }
 
     // Validate amounts
