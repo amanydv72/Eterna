@@ -2,13 +2,18 @@
   "info": {
     "name": "Order Execution Engine API",
     "_postman_id": "order-execution-engine-v1",
-    "description": "Complete API collection for testing the Order Execution Engine with DEX routing, WebSocket updates, queue management, and NEW Wrapped SOL (WSOL) handling for seamless native SOL trading.",
+    "description": "Complete API collection for testing the Order Execution Engine with DEX routing, WebSocket updates, queue management, and NEW Wrapped SOL (WSOL) handling for seamless native SOL trading.\n\n🚀 LIVE DEPLOYMENT: https://eterna-production.up.railway.app\n\n💡 TIP: Use {{baseUrl}} for production testing, {{localUrl}} for local development.",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
     "version": "1.0.0"
   },
   "variable": [
     {
       "key": "baseUrl",
+      "value": "https://eterna-production.up.railway.app",
+      "type": "string"
+    },
+    {
+      "key": "localUrl",
       "value": "http://localhost:3000",
       "type": "string"
     },
