@@ -34,6 +34,68 @@ interface ListOrdersQuery {
 
 export async function registerOrderRoutes(server: FastifyInstance): Promise<void> {
   /**
+   * POST /api/orders/validate
+   * Validate order data without executing
+   */
+  server.post<{ Body: ExecuteOrderBody }>(
+    '/api/orders/validate',
+    {
+      schema: {
+        body: ExecuteOrderSchema,
+        response: {
+          200: {
+            type: 'object',
+            properties: {
+              success: { type: 'boolean' },
+              message: { type: 'string' },
+              isValid: { type: 'boolean' },
+            },
+          },
+          400: ErrorResponseSchema,
+          500: ErrorResponseSchema,
+        },
+      },
+    },
+    async (request: FastifyRequest<{ Body: ExecuteOrderBody }>, reply: FastifyReply) => {
+      try {
+        const { tokenIn, tokenOut, amountIn, slippage = 0.01, orderType = OrderType.MARKET } = request.body;
+
+        // Validate order data
+        const validation = await orderService.validateOrder({
+          tokenIn,
+          tokenOut,
+          amountIn,
+          slippage,
+          orderType,
+        });
+
+        if (!validation.isValid) {
+          return reply.code(400).send({
+            success: false,
+            error: 'Validation Error',
+            message: validation.errors.join(', '),
+            statusCode: 400,
+          });
+        }
+
+        return reply.code(200).send({
+          success: true,
+          message: 'Order validation passed',
+          isValid: true,
+        });
+      } catch (error) {
+        request.log.error({ error }, 'Failed to validate order');
+        return reply.code(500).send({
+          success: false,
+          error: 'Internal Server Error',
+          message: error instanceof Error ? error.message : 'Unknown error',
+          statusCode: 500,
+        });
+      }
+    }
+  );
+
+  /**
    * POST /api/orders/execute
    * Execute a new order
    */
