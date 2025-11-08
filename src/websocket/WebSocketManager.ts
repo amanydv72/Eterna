@@ -112,7 +112,8 @@ export class WebSocketManager {
 
     orderConnections.forEach((conn) => {
       try {
-        if (conn.ws.readyState === WebSocket.OPEN) {
+        // Use readyState value directly (1 = OPEN) instead of WebSocket.OPEN constant
+        if (conn.ws.readyState === 1) {
           this.sendToClient(conn.ws, message);
           successCount++;
         } else {
@@ -142,7 +143,8 @@ export class WebSocketManager {
    * Send message to a specific client
    */
   private sendToClient(ws: WebSocket, message: Record<string, any>): void {
-    if (ws.readyState === WebSocket.OPEN) {
+    // Use readyState value directly (1 = OPEN)
+    if (ws.readyState === 1) {
       ws.send(JSON.stringify(message));
     }
   }
