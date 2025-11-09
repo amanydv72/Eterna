@@ -6,6 +6,10 @@
 
 **GitHub Repository:** https://github.com/amanydv72/Eterna
 
+**Postman API Documentation:** https://documenter.getpostman.com/view/37328811/2sB3WsQLKZ
+
+**Demo Video:** https://www.youtube.com/watch?v=xe5l9T57pO0
+
 ## Overview
 
 A high-performance order execution engine built for Solana DEX trading. Features intelligent multi-DEX routing (Raydium/Meteora), real-time WebSocket status updates, and robust queue-based processing with automatic retries. Supports native SOL trading with automatic WSOL handling for seamless user experience.
@@ -28,6 +32,8 @@ A high-performance order execution engine built for Solana DEX trading. Features
 
 **Production URL:** https://eterna-production.up.railway.app/
 
+**Demo Video:** Watch the [live demonstration on YouTube](https://www.youtube.com/watch?v=xe5l9T57pO0) showing order execution flow, DEX routing decisions, and queue processing.
+
 **Quick Test:**
 ```bash
 # Health Check
@@ -45,7 +51,9 @@ curl -X POST https://eterna-production.up.railway.app/api/orders/execute \
   }'
 ```
 
-**Postman Collection:** Import `postman_collection.json` (40+ test cases included)
+**Postman Collection:** 
+- Import `postman_collection.json` (40+ test cases included)
+- [View Online Documentation](https://documenter.getpostman.com/view/37328811/2sB3WsQLKZ)
 
 ## Features
 
@@ -666,7 +674,7 @@ All files             |   84.74 |    78.33 |   88.23 |   84.21
 
 ### Postman Collection
 
-Import `postman_collection.json` for comprehensive API testing:
+Import `postman_collection.json` for comprehensive API testing, or [view the online documentation](https://documenter.getpostman.com/view/37328811/2sB3WsQLKZ).
 
 - **40+ test cases** covering all endpoints
 - **Automated validation** scripts
@@ -681,6 +689,10 @@ Import `postman_collection.json` for comprehensive API testing:
 - Order retrieval and filtering
 - WebSocket health checks
 
+**Documentation Links:**
+- [Postman API Reference](https://documenter.getpostman.com/view/37328811/2sB3WsQLKZ)
+- [Live Demo Video](https://www.youtube.com/watch?v=xe5l9T57pO0)
+
 ## Deployment
 
 ### Production Deployment (Railway)
@@ -688,6 +700,8 @@ Import `postman_collection.json` for comprehensive API testing:
 The application is deployed on Railway.app with managed PostgreSQL and Redis instances.
 
 **Live URL:** https://eterna-production.up.railway.app/
+
+**Demo:** [Watch the live demonstration](https://www.youtube.com/watch?v=xe5l9T57pO0) of the production deployment
 
 **Infrastructure:**
 - **Platform:** Railway.app (free tier)
@@ -807,6 +821,13 @@ backend/
 ```
 
 
+
+## Resources
+
+- **Live Deployment:** https://eterna-production.up.railway.app/
+- **GitHub Repository:** https://github.com/amanydv72/Eterna
+- **Demo Video:** https://www.youtube.com/watch?v=xe5l9T57pO0
+- **Postman Documentation:** https://documenter.getpostman.com/view/37328811/2sB3WsQLKZ
 
 ## Author
 
